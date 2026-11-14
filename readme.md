@@ -1,7 +1,7 @@
 # Straight Rows: Autonomous Fleet GNSS Diagnostics
 
 ## Overview
-This repository contains a multi-channel GNSS anomaly detection and attribution engine developed for the Bluestaq hackathon. The system processes tractor sensor telemetry and Space Domain Awareness (SDA) environmental feeds to detect, classify, and attribute GNSS hazards and vehicle faults in real time. It outputs calibrated confidence scores and structured forensic evidence for agricultural operator decision support.
+This repository contains a multi-channel GNSS anomaly detection and attribution engine developed for the Bluestaq hackathon. The system processes tractor sensor telemetry and Space Domain Awareness (SDA) environmental feeds to detect, classify, and attribute GNSS hazards and vehicle faults in real time. It outputs calibrated confidence scores and structured forensic evidence to support agricultural operator decisions.
 
 ---
 
@@ -33,14 +33,14 @@ data/
 ## Execution Commands
 
 ### 1. Regenerate and Validate the Submission File
-To execute the core detection engine, evaluate performance against the development set, generate the blind evaluation predictions, and validate the output schema, run:
+To run the detection engine, evaluate it against the training data, and generate the final predictions, run:
 ```bash
 python submission/solution.py --data data --output submission.json --github-handle Lampfood --repo-url https://github.com/Lampfood/straight-rows
 python submission/validate_submission.py submission.json
 ```
 
 ### 2. Generate the Interactive Operator Dashboard
-To build and launch the standalone operator presentation app:
+To build and launch the interactive operator dashboard:
 ```bash
 python build_dashboard.py
 ```
@@ -51,7 +51,7 @@ Open `operator_dashboard.html` in any modern web browser to inspect live mission
 ## Approach & Utilization of Labeled Data
 
 ### Multi-Channel Detection Architecture
-Rather than utilizing a mutually exclusive decision tree, our engine runs five independent parallel detection channels. This guarantees that overlapping events—such as terrestrial radio jamming occurring during an active solar storm—are successfully isolated:
+Rather than relying on a rigid, mutually exclusive decision tree, our engine runs five independent parallel detection channels. This guarantees that overlapping events, such as terrestrial radio jamming occurring during an active solar storm, are cleanly isolated:
 1. **SPACE_WEATHER:** Detects regional ionospheric scintillation ($S_4 \ge 0.15$) paired with fleet carrier-to-noise ($C/N_0$) depression while RTK base links remain intact.
 2. **JAMMING:** Identifies localized RF interference using a dual-regime gate (clear-sky relative depression vs. storm-concurrent carrier and satellite collapse) affecting two or more tractors simultaneously.
 3. **SPOOFING:** Detects single-tractor guidance divergence (cross-track error) while signal strength and RTK link health remain nominal, utilizing backward onset backtracking to pinpoint attack start times.
@@ -59,7 +59,7 @@ Rather than utilizing a mutually exclusive decision tree, our engine runs five i
 5. **MULTIPATH:** Operates on raw 1-Hz telemetry to extract brief signal notches ($8\text{s}$ to $40\text{s}$) and applies latitude-adjusted 45-meter spatial recurrence clustering to identify stationary physical reflectors (grain bins, tree lines, headland structures) with zero hardcoded GPS coordinates.
 
 ### How Labeled Data Was Used
-The development set (`train_episodes.json`, covering May 4 through May 5) was used to benchmark detection thresholds and tune interval merging parameters. By comparing our model predictions against ground-truth labels using a local diagnostic scorer, we optimized temporal intersection-over-union (IoU) and onset timing to achieve a Dev score of 39.00 / 40.00 (0.96 Macro-F1 with 100% mean onset credit).
+We used the development set (`train_episodes.json`, covering May 4 through May 5) to benchmark detection thresholds and tune interval-merging parameters. By comparing our model predictions against ground-truth labels using a local diagnostic scorer, we optimized temporal intersection-over-union (IoU) and onset timing to achieve a Dev score of 39.00 / 40.00 (0.96 Macro-F1 with 100% mean onset credit).
 
 ---
 
